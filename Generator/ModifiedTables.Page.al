@@ -19,18 +19,22 @@ page 99998 "Modified Tables"
                 field("Table Name"; Rec."Table Name")
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
                 field(DataPerCompany; Rec.DataPerCompany)
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
                 field(TableType; Rec."TableType")
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
                 field(ObsoleteState; Rec.ObsoleteState)
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
             }
         }

@@ -105,18 +105,18 @@ page 99999 "Uplift Generator"
                 repeat
                     if ModifiedTables.FindSet(false) then
                         repeat
-                            SQL1.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 1));
-                            SQL2.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 2));
-                            SQL3.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 3));
+                            SQL1.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(ModifiedTables."Table Name"), 1));
+                            SQL2.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(ModifiedTables."Table Name"), 2));
+                            SQL3.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(ModifiedTables."Table Name"), 3));
                         until ModifiedTables.Next() = 0;
                 until Company.Next() = 0;
 
             ModifiedTables.SetRange(DataPerCompany, false);
             if ModifiedTables.FindSet(false) then
                 repeat
-                    SQL1.AddText(SQLTable('', ConvertName(Tables."Object Name"), 1));
-                    SQL2.AddText(SQLTable('', ConvertName(Tables."Object Name"), 2));
-                    SQL3.AddText(SQLTable('', ConvertName(Tables."Object Name"), 3));
+                    SQL1.AddText(SQLTable('', ConvertName(ModifiedTables."Table Name"), 1));
+                    SQL2.AddText(SQLTable('', ConvertName(ModifiedTables."Table Name"), 2));
+                    SQL3.AddText(SQLTable('', ConvertName(ModifiedTables."Table Name"), 3));
                 until ModifiedTables.Next() = 0;
 
         end else begin

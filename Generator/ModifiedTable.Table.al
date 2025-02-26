@@ -20,7 +20,6 @@ table 99999 "Modified Table"
                 Rec.DataPerCompany := TableMetadata.DataPerCompany;
                 Rec."TableType" := TableMetadata.TableType;
                 Rec.ObsoleteState := TableMetadata.ObsoleteState;
-                Rec.Modify();
             end;
         }
         field(2; "Table Name"; Text[30])
