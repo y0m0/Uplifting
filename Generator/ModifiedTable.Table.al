@@ -35,7 +35,7 @@ table 99999 "Modified Table"
         }
         field(5; ObsoleteState; Option)
         {
-            OptionMembers = Active,Obsolete;
+            OptionMembers = No,Pending,Removed;
         }
     }
 

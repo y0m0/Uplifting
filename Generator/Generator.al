@@ -100,6 +100,7 @@ page 99999 "Uplift Generator"
 
             ModifiedTables.SetRange(DataPerCompany, true);
             ModifiedTables.SetRange(TableType, ModifiedTables.TableType::Normal);
+            ModifiedTables.SetRange(ObsoleteState, ModifiedTables.ObsoleteState::No);
             if Company.FindSet(false) then
                 repeat
                     if ModifiedTables.FindSet(false) then

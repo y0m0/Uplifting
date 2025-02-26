@@ -16,7 +16,22 @@ page 99998 "Modified Tables"
                 {
                     ApplicationArea = All;
                 }
-                
+                field("Table Name"; Rec."Table Name")
+                {
+                    ApplicationArea = All;
+                }
+                field(DataPerCompany; Rec.DataPerCompany)
+                {
+                    ApplicationArea = All;
+                }
+                field(TableType; Rec."TableType")
+                {
+                    ApplicationArea = All;
+                }
+                field(ObsoleteState; Rec.ObsoleteState)
+                {
+                    ApplicationArea = All;
+                }
             }
         }
     }
