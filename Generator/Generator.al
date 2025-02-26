@@ -1,8 +1,8 @@
 page 99999 "Uplift Generator"
 {
-    PageType = NavigatePage;
+    PageType = Document;
     SourceTable = AllObj;
-    SourceTableView = WHERE("Object Type" = filter(Table),
+    SourceTableView = where("Object Type" = filter(Table),
                              "App Package ID" = filter('{00000000-0000-0000-0000-000000000000}'),
                              "Object ID" = filter('50000..2000000000'));
     Editable = true;
@@ -25,8 +25,14 @@ page 99999 "Uplift Generator"
             repeater(Rep)
             {
                 Editable = false;
-                field("Object ID"; "Object ID") { ApplicationArea = All; }
-                field("Object Name"; "Object Name") { ApplicationArea = All; }
+                field("Object ID"; "Object ID")
+                {
+                    ApplicationArea = All;
+                }
+                field("Object Name"; "Object Name")
+                {
+                    ApplicationArea = All;
+                }
             }
         }
     }
@@ -34,6 +40,17 @@ page 99999 "Uplift Generator"
     {
         area(Processing)
         {
+            action(SetModifiedTables)
+            {
+                Caption = 'Set Modified Tables';
+                ApplicationArea = All;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+                RunObject = page "Modified Tables";
+            }
+
             action(Generate)
             {
                 Caption = 'Generate Uplifting Script';
@@ -54,6 +71,7 @@ page 99999 "Uplift Generator"
     var
         Company: Record Company;
         Tables: Record AllObj;
+        TableMetadata: Record "Table Metadata";
         SQL1: BigText;
         SQL2: BigText;
         SQL3: BigText;
@@ -62,35 +80,46 @@ page 99999 "Uplift Generator"
         OutS: OutStream;
         B: Record TempBlob;
     begin
+        ModifiedTablesOnly := ModifiedTablesExists();
+
         LF[1] := 10;
         if ExtensionGUID = '' then
             Error('Please specify a Extension GUID before continuing');
 
         // Step 1
-        if Company.findset then
+        if Company.FindSet() then
             repeat
                 CurrPage.SetSelectionFilter(Tables);
-                if Tables.FINDSET then
+                if Tables.FindSet() then
                     repeat
-                        if DataPerCompany(tables."Object ID") then begin
-                            SQL1.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 1));
-                            SQL2.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 2));
-                            SQL3.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 3));
-                        end;
-                    until Tables.NEXT = 0;
-            until Company.next = 0;
-        if Tables.FINDSET then
+                        if DataPerCompany(Tables."Object ID") and IsNormalNotObsoletedTable(Tables."Object ID") then
+                            if ModifiedTablesOnly then begin
+                                if IsTableInModifiedTables(Tables."Object ID") and DataPerCompany(Tables."Object ID") and IsNormalNotObsoletedTable(Tables."Object ID") then begin
+                                    SQL1.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 1));
+                                    SQL2.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 2));
+                                    SQL3.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 3));
+                                end;
+                            end else begin
+                                SQL1.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 1));
+                                SQL2.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 2));
+                                SQL3.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 3));
+                            end;
+                    until Tables.Next() = 0;
+            until Company.Next() = 0;
+
+        if Tables.FindSet() then
             repeat
-                if NOT DataPerCompany(tables."Object ID") then begin
-                    SQL1.AddText(SQLTable('', ConvertName(Tables."Object Name"), 1));
-                    SQL2.AddText(SQLTable('', ConvertName(Tables."Object Name"), 2));
-                    SQL3.AddText(SQLTable('', ConvertName(Tables."Object Name"), 3));
+                if (not DataPerCompany(Tables."Object ID")) and IsNormalNotObsoletedTable(Tables."Object ID") then begin
+                    SQL1.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 1));
+                    SQL2.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 2));
+                    SQL3.AddText(SQLTable(ConvertName(Company.Name) + '$', ConvertName(Tables."Object Name"), 3));
                 end;
             until Tables.NEXT = 0;
+
         if SQL1.Length > 0 then begin
             // Step1
             SQL1.AddText(GenerateFieldsScript(1));
-            B.INIT;
+            B.Init;
             B.BLob.CreateOutStream(OutS);
             SQL1.Write(OutS);
             B.Blob.CreateInStream(InS);
@@ -99,16 +128,16 @@ page 99999 "Uplift Generator"
             if confirm('Step 1 download done?') then;
             // Step2
             SQL2.AddText(GenerateFieldsScript(2));
-            B.INIT;
+            B.Init;
             B.BLob.CreateOutStream(OutS);
             SQL2.Write(OutS);
             B.Blob.CreateInStream(InS);
             FileName := 'uplift-step2.sql';
             DownloadFromStream(InS, 'Save SQL Script', '', '', FileName);
-            if confirm('Step 2 download done?') then;
+            if Confirm('Step 2 download done?') then;
             // Step3
             SQL3.AddText(GenerateFieldsScript(3));
-            B.INIT;
+            B.Init;
             B.BLob.CreateOutStream(OutS);
             SQL3.Write(OutS);
             B.Blob.CreateInStream(InS);
@@ -125,26 +154,26 @@ page 99999 "Uplift Generator"
         SQL: Text;
         Company: Record Company;
     begin
-        F.SETFILTER("No.", FieldNumberFilter);
-        F.SETFILTER(TableNo, '1..49999|99000750..99009999');
-        F.SETRANGE(Class, F.Class::Normal);
-        if f.findset then
+        F.SetFilter("No.", FieldNumberFilter);
+        F.SetFilter(TableNo, '1..49999|99000750..99009999');
+        F.SetRange(Class, F.Class::Normal);
+        if F.FindSet() then
             repeat
-                IF F.TableNo <> CurrentTable then begin
+                if F.TableNo <> CurrentTable then begin
                     if CurrentTable <> 0 then begin
-                        if Company.FINDSET THEN
+                        if Company.FindSet() then
                             repeat
                                 // Generate script for table
                                 SQL += GenerateTableFields(CurrentTable, Company, FieldList, Step);
                             until Company.next = 0;
                     end;
-                    CLEAR(FieldList);
+                    Clear(FieldList);
                     CurrentTable := F.TableNo;
                 end;
                 FieldList.Add(F.FieldName);
-            until f.next = 0;
+            until F.next = 0;
         if CurrentTable <> 0 then
-            if Company.FINDSET THEN
+            if Company.FindSet() then
                 repeat
                     // Generate script for table
                     SQL += GenerateTableFields(CurrentTable, Company, FieldList, Step);
@@ -168,14 +197,23 @@ page 99999 "Uplift Generator"
         i: Integer;
         PrimaryKeyTransferList: Text;
         FieldTransferList: Text;
+        FieldKeyNames: List of [Text];
     begin
-        RecRef.OPEN(CurrentTableNo);
+        if not IsNormalNotObsoletedTable(CurrentTableNo) then
+            exit;
+
+        if ModifiedTablesOnly then
+            if not IsTableInModifiedTables(CurrentTableNo) then
+                exit;
+
+        RecRef.Open(CurrentTableNo);
         NewTableName := ConvertName(Company.Name) + '$' + ConvertName(RecRef.Name) + '.new';
         TableName := ConvertName(Company.Name) + '$' + ConvertName(RecRef.Name);
         TableExtensionName := ConvertName(Company.Name) + '$' + ConvertName(RecRef.Name) + '$' + ExtensionGUID;
         KeyRef := RecRef.KeyIndex(1);
-        for i := 1 to KeyRef.FieldCount DO begin
+        for i := 1 to KeyRef.FieldCount do begin
             FRef := KeyRef.FieldIndex(i);
+            FieldKeyNames.Add(FRef.Name);
             if FieldListStr <> '' then
                 FieldListStr += ',';
             FieldListStr += '[' + ConvertName(FRef.Name) + ']';
@@ -183,16 +221,19 @@ page 99999 "Uplift Generator"
                 PrimaryKeyTransferList += LF + ' and ';
             PrimaryKeyTransferList += '([' + NewTableName + '].[' + ConvertName(FRef.Name) + ']=[' +
                                       TableExtensionName + '].[' + ConvertName(FRef.Name) + '])';
-        END;
+        end;
         for i := 1 to FieldList.Count do begin
-            if FieldListStr <> '' then
-                FieldListStr += ',';
             FieldList.Get(i, FieldName);
-            FieldListStr += '[' + ConvertName(FieldName) + ']';
-            if FieldTransferList <> '' then
-                FieldTransferList += LF + ',';
-            FieldTransferList += '[' + TableExtensionName + '].[' + ConvertName(FieldName) + ']=[' +
-                                      NewTableName + '].[' + ConvertName(FieldName) + ']';
+            if not (FieldKeyNames.Contains(FieldName)) then begin // avoid adding key fields again
+                if FieldListStr <> '' then
+                    FieldListStr += ',';
+
+                FieldListStr += '[' + ConvertName(FieldName) + ']';
+                if FieldTransferList <> '' then
+                    FieldTransferList += LF + ',';
+                FieldTransferList += '[' + TableExtensionName + '].[' + ConvertName(FieldName) + ']=[' +
+                                          NewTableName + '].[' + ConvertName(FieldName) + ']';
+            end;
         end;
         case Step of
             1:
@@ -200,9 +241,9 @@ page 99999 "Uplift Generator"
                     NewTableName + '] from [' +
                     TableName + '];' + LF);
             2:
-                Exit('UPDATE [' + TableExtensionName + '] SET ' + LF +
+                Exit('update [' + TableExtensionName + '] set ' + LF +
                      FieldTransferList + LF +
-                     ' FROM [' + NewTableName + '] WHERE ' +
+                     ' from [' + NewTableName + '] where ' +
                      PrimaryKeyTransferList + ';' + LF);
             3:
                 Exit('DROP TABLE [' + NewTableName + '];' + LF);
@@ -219,12 +260,12 @@ page 99999 "Uplift Generator"
                 TableName + ''',''' +
                 Company +
                 TableName + '$' +
-                ExtensionGUID + '.bak'';' + LF + 'Select * Into [' +
+                ExtensionGUID + '.bak'';' + LF + 'select * into [' +
                 Company +
-                TableName + '] From [' +
+                TableName + '] from [' +
                 Company +
                 TableName + '$' +
-                ExtensionGuid + '.bak] Where 1 = 2;' + LF);
+                ExtensionGuid + '.bak] where 1 = 2;' + LF);
             2:
                 exit(
                 'exec sp_rename ''[' +
@@ -262,17 +303,44 @@ page 99999 "Uplift Generator"
         exit(Name);
     end;
 
-    procedure DataPerCompany(TableID: Integer): boolean
+    procedure DataPerCompany(TableID: Integer): Boolean
     var
-        TableMetadata: record "Table Metadata";
+        TableMetadata: Record "Table Metadata";
     begin
         TableMetadata.get(TableID);
         exit(TableMetadata.DataPerCompany)
+    end;
+
+    procedure IsNormalNotObsoletedTable(TableID: Integer): Boolean
+    var
+        TableMetadata: Record "Table Metadata";
+    begin
+        TableMetadata.Get(TableID);
+
+        if (TableMetadata.ObsoleteState = TableMetadata.ObsoleteState::Removed) then
+            exit;
+
+        exit(TableMetadata.TableType = TableMetadata.TableType::Normal);
+    end;
+
+    procedure IsTableInModifiedTables(TableID: Integer): Boolean
+    var
+        ModifiedTable: Record "Modified Table";
+    begin
+        exit(ModifiedTable.Get(TableID));
+    end;
+
+    procedure ModifiedTablesExists(): Boolean
+    var
+        ModifiedTable: Record "Modified Table";
+    begin
+        exit(not ModifiedTable.IsEmpty);
     end;
 
     var
         ExtensionGUID: Text;
         FieldNumberFilter: Text;
         LF: Text;
+        ModifiedTablesOnly: Boolean;
 
 }

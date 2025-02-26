@@ -2,17 +2,39 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Your own server",
+            "request": "launch",
+            "type": "al",
+            "environmentType": "OnPrem",
+            "server": "http://51.120.12.210",
+            "serverInstance": "DEV",
+            "authentication": "UserPassword",
+            "startupObjectId": 22,
+            "startupObjectType": "Page",
+            "breakOnError": "All",
+            "launchBrowser": true,
+            "enableLongRunningSqlStatements": true,
+            "enableSqlInformationDebugger": true,
+            "usePublicURLFromServer": true
+        },
+        {
+            "name": "Docker bc14",
             "type": "al",
             "request": "launch",
-            "name": "Your own server",
-            "server": "http://bcca",
+            "environmentType": "OnPrem",
+            "server": "http://bc14",
             "serverInstance": "NAV",
             "authentication": "UserPassword",
-            "startupObjectId": 99999,
-            "startupObjectType": "Page",
-            "breakOnError": true,
+            "startupObjectId": 22,
+            "breakOnError": "All",
+            "breakOnRecordWrite": "None",
             "launchBrowser": true,
-            "schemaUpdateMode": "Recreate"
+            "enableSqlInformationDebugger": true,
+            "enableLongRunningSqlStatements": true,
+            "longRunningSqlStatementsThreshold": 500,
+            "numberOfSqlStatements": 10,
+            "tenant": "default",
+            "usePublicURLFromServer": true
         }
     ]
 }

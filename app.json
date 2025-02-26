@@ -2,7 +2,7 @@
   "id": "25222d05-0e26-4988-b6ca-d20cd9bfe0e0",
   "name": "Uplifting",
   "publisher": "hougaard.com",
-  "version": "1.0.0.2",
+  "version": "1.0.0.4",
   "brief": "",
   "description": "",
   "privacyStatement": "",
@@ -16,7 +16,7 @@
   "application": "14.0.0.0",
   "idRanges": [
     {
-      "from": 99999,
+      "from": 99998,
       "to": 99999
     }
   ],
