@@ -142,7 +142,7 @@ page 99999 "Uplift Generator"
                         SQL2.AddText(SQLTable('', ConvertName(Tables."Object Name"), 2));
                         SQL3.AddText(SQLTable('', ConvertName(Tables."Object Name"), 3));
                     end;
-                until Tables.NEXT = 0;
+                until Tables.Next() = 0;
 
         end;
 
@@ -150,9 +150,9 @@ page 99999 "Uplift Generator"
             // Step1
             SQL1.AddText(GenerateFieldsScript(1));
             B.Init;
-            B.BLob.CreateOutStream(OutS);
+            B.BLob.CreateOutStream(OutS, TextEncoding::UTF8);
             SQL1.Write(OutS);
-            B.Blob.CreateInStream(InS);
+            B.Blob.CreateInStream(InS, TextEncoding::UTF8);
             FileName := 'uplift-step1.sql';
             DownloadFromStream(InS, 'Save SQL Script', '', '', FileName);
             if Confirm('Step 1 download done?') then;
@@ -160,9 +160,9 @@ page 99999 "Uplift Generator"
             // Step2
             SQL2.AddText(GenerateFieldsScript(2));
             B.Init;
-            B.BLob.CreateOutStream(OutS);
+            B.BLob.CreateOutStream(OutS, TextEncoding::UTF8);
             SQL2.Write(OutS);
-            B.Blob.CreateInStream(InS);
+            B.Blob.CreateInStream(InS, TextEncoding::UTF8);
             FileName := 'uplift-step2.sql';
             DownloadFromStream(InS, 'Save SQL Script', '', '', FileName);
             if Confirm('Step 2 download done?') then;
@@ -170,9 +170,9 @@ page 99999 "Uplift Generator"
             // Step3
             SQL3.AddText(GenerateFieldsScript(3));
             B.Init;
-            B.BLob.CreateOutStream(OutS);
+            B.BLob.CreateOutStream(OutS, TextEncoding::UTF8);
             SQL3.Write(OutS);
-            B.Blob.CreateInStream(InS);
+            B.Blob.CreateInStream(InS, TextEncoding::UTF8);
             FileName := 'uplift-step3.sql';
             DownloadFromStream(InS, 'Save SQL Script', '', '', FileName);
             Message('Done');
@@ -305,8 +305,8 @@ page 99999 "Uplift Generator"
         BadCharacters: Text;
     begin
         BadCharacters := '."\/''%][';
-        for i := 1 to strlen(Name) do begin
-            if strpos(BadCharacters, copystr(name, i, 1)) > 0 then
+        for i := 1 to StrLen(Name) do begin
+            if StrPos(BadCharacters, CopyStr(name, i, 1)) > 0 then
                 Name[i] := '_';
         end;
         exit(Name);
