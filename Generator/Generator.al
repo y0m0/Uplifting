@@ -101,6 +101,7 @@ page 99999 "Uplift Generator"
             ModifiedTables.SetRange(DataPerCompany, true);
             ModifiedTables.SetRange(TableType, ModifiedTables.TableType::Normal);
             ModifiedTables.SetRange(ObsoleteState, ModifiedTables.ObsoleteState::No);
+            ModifiedTables.SetFilter("Table No.", '50000..99000749|99010000..1999999999'); //only custom tables
             if Company.FindSet(false) then
                 repeat
                     if ModifiedTables.FindSet(false) then
